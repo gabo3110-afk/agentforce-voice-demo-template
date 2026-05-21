@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Plan_Name__c</fullName>
-    <description>Vehicle / plan description (e.g., "<Brand> Yaris HB").</description>
+    <description>Vehicle / plan description (e.g., "Brand Yaris HB").</description>
     <inlineHelpText>Vehicle the customer is saving toward.</inlineHelpText>
     <label>Plan Name</label>
     <length>100</length>

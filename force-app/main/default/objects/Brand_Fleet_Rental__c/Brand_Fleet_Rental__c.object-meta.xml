@@ -3,7 +3,7 @@
     <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
-    <description><Brand> Fleet Rental rental contracts (Argentina) — quotes, reservations, and active rentals.</description>
+    <description>Brand Fleet Rental rental contracts (Argentina) — quotes, reservations, and active rentals.</description>
     <enableActivities>true</enableActivities>
     <enableBulkApi>true</enableBulkApi>
     <enableFeeds>false</enableFeeds>
@@ -12,13 +12,13 @@
     <enableSearch>true</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
-    <label><Brand> Fleet Rental Contract</label>
+    <label>Brand Fleet Rental Contract</label>
     <nameField>
         <label>Contract Number</label>
         <displayFormat>KIN-{00000}</displayFormat>
         <type>AutoNumber</type>
     </nameField>
-    <pluralLabel><Brand> Fleet Rental Contracts</pluralLabel>
+    <pluralLabel>Brand Fleet Rental Contracts</pluralLabel>
     <searchLayouts/>
     <sharingModel>ReadWrite</sharingModel>
 </CustomObject>

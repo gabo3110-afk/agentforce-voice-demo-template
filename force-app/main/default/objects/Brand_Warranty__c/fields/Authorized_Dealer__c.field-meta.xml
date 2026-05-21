@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Authorized_Dealer__c</fullName>
     <description>Authorized dealer / service network where the vehicle was last serviced for warranty validity.</description>
-    <inlineHelpText>Name of authorized <Brand> dealer.</inlineHelpText>
+    <inlineHelpText>Name of authorized Brand dealer.</inlineHelpText>
     <label>Authorized Dealer</label>
     <length>100</length>
     <required>false</required>

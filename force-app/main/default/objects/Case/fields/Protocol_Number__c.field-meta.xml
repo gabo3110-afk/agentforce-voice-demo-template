@@ -3,7 +3,7 @@
     <fullName>Protocol_Number__c</fullName>
     <description>External protocol number (TASA / TDB) for the case (e.g., "797-3"). Used for customer status lookups.</description>
     <externalId>true</externalId>
-    <inlineHelpText>Protocol number provided by <Brand>.</inlineHelpText>
+    <inlineHelpText>Protocol number provided by Brand.</inlineHelpText>
     <label>Protocol Number</label>
     <length>30</length>
     <required>false</required>

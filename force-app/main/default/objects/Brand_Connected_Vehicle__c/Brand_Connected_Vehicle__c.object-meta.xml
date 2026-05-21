@@ -3,7 +3,7 @@
     <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
-    <description><Brand> Connected app titular registry — tracks the registered titular for a connected vehicle.</description>
+    <description>Brand Connected app titular registry — tracks the registered titular for a connected vehicle.</description>
     <enableActivities>true</enableActivities>
     <enableBulkApi>true</enableBulkApi>
     <enableFeeds>false</enableFeeds>
@@ -12,13 +12,13 @@
     <enableSearch>true</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
-    <label><Brand> Connected Vehicle</label>
+    <label>Brand Connected Vehicle</label>
     <nameField>
         <label>Connected Number</label>
         <displayFormat>CON-{00000}</displayFormat>
         <type>AutoNumber</type>
     </nameField>
-    <pluralLabel><Brand> Connected Vehicles</pluralLabel>
+    <pluralLabel>Brand Connected Vehicles</pluralLabel>
     <searchLayouts/>
     <sharingModel>ReadWrite</sharingModel>
 </CustomObject>

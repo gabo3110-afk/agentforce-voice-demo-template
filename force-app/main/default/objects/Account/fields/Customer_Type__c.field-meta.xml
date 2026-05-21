@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Customer_Type__c</fullName>
-    <description>Type of <Brand> customer for this account.</description>
+    <description>Type of Brand customer for this account.</description>
     <inlineHelpText>Individual, Corporate, or Fleet.</inlineHelpText>
     <label>Customer Type</label>
     <required>false</required>

@@ -12,13 +12,13 @@
     <enableSearch>true</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
-    <label><Brand> Fleet Station</label>
+    <label>Brand Fleet Station</label>
     <nameField>
         <label>Station Number</label>
         <displayFormat>FLT-{00000}</displayFormat>
         <type>AutoNumber</type>
     </nameField>
-    <pluralLabel><Brand> Fleet Stations</pluralLabel>
+    <pluralLabel>Brand Fleet Stations</pluralLabel>
     <searchLayouts/>
     <sharingModel>ReadWrite</sharingModel>
 </CustomObject>

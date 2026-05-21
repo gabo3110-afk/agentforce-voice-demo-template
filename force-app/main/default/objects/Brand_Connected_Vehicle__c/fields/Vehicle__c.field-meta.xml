@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Vehicle__c</fullName>
     <deleteConstraint>Restrict</deleteConstraint>
-    <description>Asset (vehicle) registered in the <Brand> Connected program.</description>
+    <description>Asset (vehicle) registered in the Brand Connected program.</description>
     <inlineHelpText>The connected Asset record.</inlineHelpText>
     <label>Vehicle</label>
     <referenceTo>Asset</referenceTo>

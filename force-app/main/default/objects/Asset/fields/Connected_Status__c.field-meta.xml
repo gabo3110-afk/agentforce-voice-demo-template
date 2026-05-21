@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Connected_Status__c</fullName>
     <defaultValue>false</defaultValue>
-    <description>True when this vehicle is enrolled in the <Brand> Connected program.</description>
+    <description>True when this vehicle is enrolled in the Brand Connected program.</description>
     <inlineHelpText>True if the vehicle is connected.</inlineHelpText>
     <label>Connected Status</label>
     <type>Checkbox</type>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Current_Titular_Name__c</fullName>
-    <description>Full name of the current titular registered in <Brand> Connected for this vehicle.</description>
+    <description>Full name of the current titular registered in Brand Connected for this vehicle.</description>
     <inlineHelpText>Full name of the registered titular.</inlineHelpText>
     <label>Current Titular Name</label>
     <length>200</length>

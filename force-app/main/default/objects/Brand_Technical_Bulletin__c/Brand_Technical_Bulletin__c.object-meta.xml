@@ -12,13 +12,13 @@
     <enableSearch>true</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
-    <label><Brand> Technical Bulletin</label>
+    <label>Brand Technical Bulletin</label>
     <nameField>
         <label>Bulletin Number</label>
         <displayFormat>TB-{00000}</displayFormat>
         <type>AutoNumber</type>
     </nameField>
-    <pluralLabel><Brand> Technical Bulletins</pluralLabel>
+    <pluralLabel>Brand Technical Bulletins</pluralLabel>
     <searchLayouts/>
     <sharingModel>ReadWrite</sharingModel>
 </CustomObject>

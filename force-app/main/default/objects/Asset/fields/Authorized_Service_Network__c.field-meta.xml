@@ -2,8 +2,8 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Authorized_Service_Network__c</fullName>
     <defaultValue>true</defaultValue>
-    <description>True if this vehicle has only been serviced in the authorized <Brand> network. Required to maintain <Brand> 10 warranty.</description>
-    <inlineHelpText>True if all services were at authorized <Brand> dealers.</inlineHelpText>
+    <description>True if this vehicle has only been serviced in the authorized Brand network. Required to maintain Brand 10 warranty.</description>
+    <inlineHelpText>True if all services were at authorized Brand dealers.</inlineHelpText>
     <label>Authorized Service Network</label>
     <type>Checkbox</type>
 </CustomField>
