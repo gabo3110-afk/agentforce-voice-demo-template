@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Preferred_Language__c</fullName>
+    <description>Preferred language for voice/chat interactions (es-AR Spanish or pt-BR Portuguese).</description>
+    <inlineHelpText>Locale code for voice TTS and Agentforce responses.</inlineHelpText>
+    <label>Preferred Language</label>
+    <required>false</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>es-AR</fullName>
+                <default>true</default>
+                <label>es-AR</label>
+            </value>
+            <value>
+                <fullName>pt-BR</fullName>
+                <default>false</default>
+                <label>pt-BR</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

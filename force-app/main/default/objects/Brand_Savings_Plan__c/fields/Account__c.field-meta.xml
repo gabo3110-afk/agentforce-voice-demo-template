@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Account__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Customer account that owns this TPA plan.</description>
+    <inlineHelpText>The customer enrolled in this Plan de Ahorro.</inlineHelpText>
+    <label>Customer Account</label>
+    <referenceTo>Account</referenceTo>
+    <relationshipLabel>Savings Plans</relationshipLabel>
+    <relationshipName>TPA_Plans</relationshipName>
+    <required>true</required>
+    <type>Lookup</type>
+</CustomField>

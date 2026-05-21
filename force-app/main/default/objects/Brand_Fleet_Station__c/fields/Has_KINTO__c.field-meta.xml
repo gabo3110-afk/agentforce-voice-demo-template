@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Has_Fleet Rental__c</fullName>
+    <defaultValue>true</defaultValue>
+    <description>True when this dealer participates in the Fleet Rental rental program.</description>
+    <inlineHelpText>Indicates Fleet Rental availability at this station.</inlineHelpText>
+    <label>Has Fleet Rental</label>
+    <type>Checkbox</type>
+</CustomField>

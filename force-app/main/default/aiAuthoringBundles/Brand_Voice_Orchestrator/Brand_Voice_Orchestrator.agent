@@ -1,0 +1,813 @@
+system:
+    instructions: |
+        Eres el asistente virtual de <Brand>. Voz profesional, cálida y natural. Para llamadas de Argentina (TASA): hablás español rioplatense con voseo (vos, tenés, podés, querés, decime). Acento porteño profesional pero cálido. Nunca usés tú ni ustedes. Para chamadas do Brasil (TDB): você fala português paulistano. Seja direto e acolhedor. Use você, nunca tu.
+        Reglas críticas no negociables: Nunca uses menú de opciones — detectá la intención de forma conversacional. Nunca cierres la llamada — esperá confirmación del cliente. Solo información de <Brand> (Lexus es parte del grupo <Brand>). Nunca menciones marcas competidoras — si el cliente compara con otra marca, redirigí hacia <Brand>. Nunca reveles nombres internos de sistemas, objetos o errores técnicos. Tus respuestas son cortas: máximo 25 palabras por turno. Nunca uses listas, viñetas, markdown ni URLs. Antes de compartir cualquier dato del cliente, verificá identidad. Cuando una acción devuelve output_es y output_pt, leé el campo en el idioma del cliente — no paraphrasees ni embellezcas. No uses la herramienta show_command — componé tu respuesta como texto directo.
+    messages:
+        welcome: "¡Hola! Bienvenido a <Brand>. Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?"
+        error: "En este momento no puedo acceder al sistema. Te paso con un especialista para que te ayude de inmediato. ¿Podés esperar un momento?"
+
+config:
+    developer_name: "Brand_Voice_Orchestrator"
+    agent_type: "AgentforceServiceAgent"
+    default_agent_user: "<EINSTEIN_AGENT_USERNAME>"
+    agent_label: "<Brand> Voice Orchestrator"
+    description: "Bilingual (es-AR / pt-BR) voice agent for <Brand> (TASA) and <Brand> (TDB). Demo: 2026-05-28 Planta Zárate."
+
+variables:
+    EndUserId: linked string
+        source: @MessagingSession.MessagingEndUserId
+        description: "Messaging end user id for the active session."
+    RoutableId: linked string
+        source: @MessagingSession.Id
+        description: "Messaging session id."
+    ContactId: linked string
+        source: @MessagingEndUser.ContactId
+        description: "Contact id from the messaging end user."
+    EndUserLanguage: linked string
+        source: @MessagingSession.EndUserLanguage
+        description: "Caller language from the messaging session."
+    country_code: mutable string = "AR"
+        description: "AR for Argentina (TASA) or BR for Brazil (TDB). Default AR for the demo. Will be set per caller post-demo when identity verification re-enables."
+    account_id: mutable string = ""
+        description: "Salesforce Account Id of the verified caller. Empty until <Brand>GetCustomerProfile succeeds."
+    caller_first_name: mutable string = ""
+        description: "Caller's first name. Used for greetings."
+    caller_patente: mutable string = ""
+        description: "Caller's vehicle license plate (Argentina format). Captured during identity verification."
+    identified: mutable boolean = True
+        description: "Identity gate. Default True for the demo — the agent assumes the caller is identified and routes directly to domain subagents. Real identity verification will be re-enabled post-demo once slot-fill behavior is tuned."
+    active_topic: mutable string = ""
+        description: "Currently in-flight domain subagent. Used by agent_router to auto-route on follow-up turns."
+    intake_dni: mutable string = ""
+        description: "Slot-filled DNI fragment from the caller's utterance. Used as input to identify_caller."
+    intake_cpf: mutable string = ""
+        description: "Slot-filled CPF fragment from the caller's utterance. Used as input to identify_caller."
+    intake_patente: mutable string = ""
+        description: "Slot-filled patente from the caller's utterance. Used as input to identify_caller."
+    intake_vin: mutable string = ""
+        description: "Slot-filled VIN or chassi from the caller's utterance. Used as input to identify_caller."
+    intake_country: mutable string = ""
+        description: "AR or BR. Inferred from caller language. Slot-filled from utterance."
+
+language:
+    default_locale: "en_US"
+    additional_locales: ""
+
+# ============================================================
+# HUB — Entry point. Identity verification + intent routing.
+# ============================================================
+
+start_agent agent_router:
+    label: "Agent Router"
+    description: "Welcome the caller, verify identity (DNI for AR or CPF for BR), then route to the relevant domain subagent."
+
+    before_reasoning:
+        if @variables.active_topic == "fleet_rental":
+            transition to @subagent.fleet_rental
+        if @variables.active_topic == "after_sales":
+            transition to @subagent.after_sales
+        if @variables.active_topic == "savings_plan":
+            transition to @subagent.savings_plan
+        if @variables.active_topic == "warranty":
+            transition to @subagent.warranty
+        if @variables.active_topic == "connected_titular":
+            transition to @subagent.connected_titular
+        if @variables.active_topic == "sales_orders":
+            transition to @subagent.sales_orders
+        if @variables.active_topic == "technical_lookup":
+            transition to @subagent.technical_lookup
+
+    reasoning:
+        instructions: ->
+            if @variables.identified == False:
+                | OBJETIVO ÚNICO: identificar al cliente.
+                  Cuando el cliente dé CUALQUIERA de estos datos — DNI, CPF, patente, VIN, chassi — INMEDIATAMENTE llamá la acción verify_caller. La acción verify_caller acepta cualquiera de esos datos como entrada — pasale los valores que el cliente acaba de dar tal cual.
+                  Si el cliente NO dio ningún identificador, pedí UNO con tono natural y conciso (nombre + últimos 4 del DNI/CPF, o la patente).
+                  REGLAS:
+                  - country_code = "AR" si habla español rioplatense, "BR" si habla portugués.
+                  - PROHIBIDO decir "estoy verificando", "un momento", "dame un segundo". Llamá verify_caller PRIMERO; respondé con el resultado.
+                  - Si verify_caller falla dos veces consecutivas, escalá con go_to_escalation.
+
+            if @variables.identified == True:
+                | Cliente verificado: {!@variables.caller_first_name}.
+                  Detectá la intención del cliente y dirigite a la subagent correspondiente.
+                  - Precio de service por kilometraje, historial de services, agendar turno, status de caso → after_sales
+                  - Alquiler de auto Fleet (solo Argentina) → kinto_rental
+                  - Plan de Ahorro, cupón de pago, cuotas (solo Argentina) → tpa_plan
+                  - Garantía, <Brand>10, cobertura, Lexus → warranty
+                  - Cambio de titular Connected (solo Argentina) → connected_titular
+                  - Status de pedido de vehículo nuevo (Brasil) → sales_orders
+                  - Pregunta técnica, manual, botón del tablero → technical_lookup
+                  Si el cliente está enojado, pide hablar con un humano, o el caso es complejo → escalation.
+
+        actions:
+            verify_caller: @actions.brand_get_customer_profile
+                description: "Look up the caller's account in Salesforce. EXTRACT identity fields from the caller's last message and pass them as inputs. Examples: if caller said 'mi patente es AD 544 VI' → patente='AD 544 VI'. If caller said 'DNI 26.335.822' → dni='26.335.822'. If caller said 'CPF 987.654.321-00' → cpf='987.654.321-00'. country_code MUST be 'AR' if caller speaks Spanish or 'BR' if Portuguese. NEVER call this with all empty strings — extract at least one identifier from the user message."
+                available when @variables.identified == False
+                with patente = ...
+                with vin = ...
+                with dni = ...
+                with cpf = ...
+                with country_code = ...
+                set @variables.identified = @outputs.success
+                set @variables.account_id = @outputs.account_id
+                set @variables.caller_first_name = @outputs.first_name
+                set @variables.country_code = @outputs.country_code
+                set @variables.caller_patente = @outputs.patente
+
+            go_to_after_sales: @utils.transition to @subagent.after_sales
+                description: "Caller asks about service price, service history, case status, or scheduling a service."
+                available when @variables.identified == True
+
+            go_to_fleet_rental: @utils.transition to @subagent.fleet_rental
+                description: "Caller wants to rent a vehicle through Fleet. Argentina only."
+                available when @variables.identified == True and @variables.country_code == "AR"
+
+            go_to_savings_plan: @utils.transition to @subagent.savings_plan
+                description: "Caller asks about Plan de Ahorro, payment voucher, or quota status. Argentina only."
+                available when @variables.identified == True and @variables.country_code == "AR"
+
+            go_to_warranty: @utils.transition to @subagent.warranty
+                description: "Caller asks about warranty, <Brand>10 program, coverage, or Lexus warranty."
+                available when @variables.identified == True
+
+            go_to_connected_titular: @utils.transition to @subagent.connected_titular
+                description: "Caller asks about <Brand> Connected, app linkage, or titular change. Argentina only."
+                available when @variables.identified == True and @variables.country_code == "AR"
+
+            go_to_sales_orders: @utils.transition to @subagent.sales_orders
+                description: "Caller asks about a new vehicle order status, etapa de entrega, faturamento, transporte. Used when caller says 'pedido de veículo', 'pedido de carro nuevo', 'mi pedido', 'meu pedido'. Different from 'caso aberto' (which is after_sales)."
+                available when @variables.identified == True
+
+            go_to_technical_lookup: @utils.transition to @subagent.technical_lookup
+                description: "Caller asks a technical or manual-style question (button on dashboard, function, light)."
+                available when @variables.identified == True
+
+            go_to_escalation: @utils.transition to @subagent.escalation
+                description: "Caller explicitly asks for a human, sentiment is negative, or the agent cannot help."
+
+            go_to_off_topic: @utils.transition to @subagent.off_topic
+                description: "Caller asks about something outside <Brand> or Lexus scope."
+
+            go_to_ambiguous_question: @utils.transition to @subagent.ambiguous_question
+                description: "Caller's request is unclear and needs clarification."
+
+    after_reasoning:
+        if @variables.identified == False and (@variables.intake_dni != "" or @variables.intake_cpf != "" or @variables.intake_patente != "" or @variables.intake_vin != ""):
+            run @actions.brand_get_customer_profile
+                with patente = @variables.intake_patente
+                with vin = @variables.intake_vin
+                with dni = @variables.intake_dni
+                with cpf = @variables.intake_cpf
+                with country_code = @variables.intake_country
+                set @variables.identified = @outputs.success
+                set @variables.account_id = @outputs.account_id
+                set @variables.caller_first_name = @outputs.first_name
+                set @variables.country_code = @outputs.country_code
+                set @variables.caller_patente = @outputs.patente
+
+    actions:
+        brand_get_customer_profile:
+            description: "Verify caller identity. Lookup by patente, VIN, DNI, or CPF and return profile."
+            label: "Identify Caller"
+            target: "apex://BrandGetCustomerProfile"
+            include_in_progress_indicator: True
+            progress_indicator_message: "Buscando tu perfil..."
+            inputs:
+                patente: string
+                    description: "Argentine licence plate, e.g., AD 544 VI."
+                    is_required: False
+                vin: string
+                    description: "Vehicle VIN or chassi (Brazil). Up to 17 characters."
+                    is_required: False
+                dni: string
+                    description: "Argentine national ID, format XX.XXX.XXX."
+                    is_required: False
+                cpf: string
+                    description: "Brazilian national ID, format XXX.XXX.XXX-XX."
+                    is_required: False
+                country_code: string
+                    description: "AR or BR. Inferred from caller's language."
+                    is_required: True
+            outputs:
+                success: boolean
+                    filter_from_agent: True
+                account_id: string
+                    filter_from_agent: True
+                first_name: string
+                    filter_from_agent: True
+                country_code: string
+                    filter_from_agent: True
+                patente: string
+                    filter_from_agent: True
+                vehicle_model: string
+                    filter_from_agent: False
+                output_es: string
+                    filter_from_agent: False
+                output_pt: string
+                    filter_from_agent: False
+                error_message: string
+                    filter_from_agent: True
+
+# ============================================================
+# AFTER SALES
+# ============================================================
+
+subagent after_sales:
+    label: "After Sales"
+    description: "Service prices, service history, case status, schedule appointment."
+
+    before_reasoning:
+        set @variables.active_topic = "after_sales"
+        if @variables.identified == False:
+            transition to @subagent.agent_router
+
+    reasoning:
+        instructions: ->
+            | Estás en after-sales. Posibles consultas:
+              1. Precio de service por kilometraje. Pedí modelo del vehículo y kilometraje (30, 60, 90, 120 mil). Llamá brand_get_service_price.
+              2. Historial de services. Pedí la patente, llamá brand_get_service_history. Después de leer la respuesta, confirmá si todos los services fueron en concesionarias oficiales.
+              3. Status de un caso abierto. Pedí el número de protocolo (ej. 797-3) o el DNI/CPF. Llamá brand_get_case_status.
+              4. Agendar service. Pedí concesionaria preferida y fecha-hora. Confirmá con el cliente antes de invocar brand_schedule_appointment.
+              Después de leer la respuesta de cualquier acción, NO la llames de nuevo a menos que el cliente pida algo nuevo.
+              Cuando el cliente termine la consulta, transicioná a agent_router con go_to_router.
+
+        actions:
+            brand_get_service_price: @actions.brand_get_service_price
+                with vehicle_model = ...
+                with service_km = ...
+                with country = @variables.country_code
+
+            brand_get_service_history: @actions.brand_get_service_history
+                with patente = ...
+                with vin = ...
+                with account_id = @variables.account_id
+
+            brand_get_case_status: @actions.brand_get_case_status
+                with protocol_number = ...
+                with dni = ...
+                with cpf = ...
+                with country = @variables.country_code
+
+            brand_schedule_appointment: @actions.brand_schedule_appointment
+                with account_id = @variables.account_id
+                with vin = ...
+                with preferred_dealer = ...
+                with preferred_date_time = ...
+
+            go_to_router: @utils.transition to @subagent.agent_router
+                description: "Return to the router after the after-sales question is answered."
+
+    actions:
+        brand_get_service_price:
+            description: "Get the service price for a <Brand> model at a given kilometre milestone (30, 60, 90 or 120 thousand)."
+            label: "Get Service Price"
+            target: "apex://BrandGetServicePrice"
+            inputs:
+                vehicle_model: string
+                    description: "<Brand> model name, e.g., ModelA, Yaris, ModelC, ModelD, ModelE."
+                    is_required: True
+                service_km: integer
+                    description: "Service kilometre milestone. Valid values: 30000, 60000, 90000, 120000."
+                    is_required: True
+                country: string
+                    description: "AR or BR."
+                    is_required: True
+            outputs:
+                success: boolean
+                    filter_from_agent: True
+                price: number
+                    filter_from_agent: True
+                output_es: string
+                    filter_from_agent: False
+                output_pt: string
+                    filter_from_agent: False
+                error_message: string
+                    filter_from_agent: True
+
+        brand_get_service_history:
+            description: "Return last 5 service appointments for a vehicle. EXTRACT the patente from the caller's most recent message and pass it as the 'patente' input. Example: caller says 'la patente es AD 544 VI' or 'patente AD 544 VI' → patente='AD 544 VI'. NEVER call this action with all empty inputs."
+            label: "Get Service History"
+            target: "apex://BrandGetServiceHistory"
+            inputs:
+                patente: string
+                    description: "Argentine licence plate, exactly as spoken (e.g., 'AD 544 VI'). Extract from the caller's message."
+                    is_required: False
+                vin: string
+                    description: "Vehicle VIN or chassi, 17 chars. Extract from the caller's message if mentioned."
+                    is_required: False
+                account_id: string
+                    description: "Salesforce Account Id. Pass empty string if not known."
+                    is_required: False
+            outputs:
+                success: boolean
+                    filter_from_agent: True
+                last_dealer: string
+                    filter_from_agent: True
+                output_es: string
+                    filter_from_agent: False
+                output_pt: string
+                    filter_from_agent: False
+                error_message: string
+                    filter_from_agent: True
+
+        brand_get_case_status:
+            description: "Lookup case status by protocol number, DNI, or CPF."
+            label: "Get Case Status"
+            target: "apex://BrandGetCaseStatus"
+            inputs:
+                protocol_number: string
+                    description: "Case protocol number, e.g. 797-3."
+                    is_required: False
+                dni: string
+                    description: "Argentine national ID."
+                    is_required: False
+                cpf: string
+                    description: "Brazilian national ID."
+                    is_required: False
+                country: string
+                    description: "AR or BR."
+                    is_required: True
+            outputs:
+                success: boolean
+                    filter_from_agent: True
+                status: string
+                    filter_from_agent: True
+                output_es: string
+                    filter_from_agent: False
+                output_pt: string
+                    filter_from_agent: False
+                error_message: string
+                    filter_from_agent: True
+
+        brand_schedule_appointment:
+            description: "Create a service appointment for the customer. Confirm dealer and date-time with the caller before invoking."
+            label: "Schedule Service Appointment"
+            target: "apex://BrandScheduleAppointment"
+            inputs:
+                account_id: string
+                    description: "Salesforce Account Id."
+                    is_required: True
+                vin: string
+                    description: "Vehicle VIN."
+                    is_required: True
+                preferred_dealer: string
+                    description: "Dealer name preferred by the customer."
+                    is_required: True
+                preferred_date_time: datetime
+                    description: "Preferred date and time for the service."
+                    is_required: True
+            outputs:
+                success: boolean
+                    filter_from_agent: True
+                appointment_id: string
+                    filter_from_agent: True
+                output_es: string
+                    filter_from_agent: False
+                output_pt: string
+                    filter_from_agent: False
+                error_message: string
+                    filter_from_agent: True
+
+# ============================================================
+# Fleet RENTAL (Argentina only)
+# ============================================================
+
+subagent fleet_rental:
+    label: "Fleet Rental"
+    description: "Fleet Rental vehicle rental. Argentina only. No home delivery — pickup at dealership."
+
+    before_reasoning:
+        set @variables.active_topic = "fleet_rental"
+        if @variables.identified == False:
+            transition to @subagent.agent_router
+        if @variables.country_code != "AR":
+            transition to @subagent.agent_router
+
+    reasoning:
+        instructions: ->
+            | Estás en Fleet. PROTOCOLO OBLIGATORIO:
+              PASO 1 — Si el cliente mencionó una zona (Zone1, Zone2, Zone4, Zone3, etc.) en su mensaje, INMEDIATAMENTE invocá brand_get_fleet_availability con esa zona. NO escribas una respuesta de texto sin invocar la acción primero.
+              PASO 2 — Si NO mencionó zona, pedí UNA en una pregunta corta y natural. No expliques el proceso interno.
+              PASO 3 — Después de invocar la acción, leé output_es palabra por palabra y agregá "El retiro es en la concesionaria, no hacemos entrega a domicilio" si la respuesta no lo dice ya.
+              PROHIBIDO:
+              - Decir "en breve te muestro", "te ayudo con", "espera un momento" sin haber invocado la acción.
+              - Pedirle al cliente que use la app o web — la gestión por voz es el canal.
+              - Presionar a un cliente adulto mayor para que instale la app.
+              SOLO transicioná a agent_router con go_to_router si el cliente cambió de tema (no quiere Fleet, ya resolvió, etc.).
+
+        actions:
+            brand_get_fleet_availability: @actions.brand_get_fleet_availability
+                description: "Look up Fleet availability NOW for the zone the caller just mentioned. Extract zone, dates, and preferred_model from the caller's messages so far. Always invoke when a zone has been mentioned."
+                with zone = ...
+                with start_date = ...
+                with end_date = ...
+                with preferred_model = ...
+
+            go_to_router: @utils.transition to @subagent.agent_router
+                description: "ONLY transition back if the caller changed topic away from Fleet (e.g., asks about service or warranty instead). Do NOT transition mid-availability question."
+
+    actions:
+        brand_get_fleet_availability:
+            description: "Find Fleet Rental vehicle availability by zone. EXTRACT the zone from the caller's most recent message — they will mention a City neighborhood or GBA zone. Examples: caller says 'estoy en Zone1' → zone='Zone1'. caller says 'desde Zone2' → zone='Zone2'. caller says 'en Zone3' → zone='Vicente Lopez'. caller says 'Zone4' → zone='Nuñez'. ALWAYS pass the zone — never call with empty zone. If the caller mentioned a model preference like ModelD, Yaris, ModelC → preferred_model. Returns up to 3 stations with available vehicles."
+            label: "Get Fleet Availability"
+            target: "apex://BrandGetFleetAvailability"
+            inputs:
+                zone: string
+                    description: "City neighborhood or GBA zone, exactly as the caller said it (e.g., 'Zone1', 'Zone2', 'Vicente Lopez', 'Nuñez', 'Zone13'). Required — extract from the caller's message."
+                    is_required: True
+                start_date: date
+                    description: "Rental start date if mentioned (yyyy-MM-dd)."
+                    is_required: False
+                end_date: date
+                    description: "Rental end date if mentioned (yyyy-MM-dd)."
+                    is_required: False
+                preferred_model: string
+                    description: "Preferred <Brand> model if mentioned, e.g., ModelD, Yaris, ModelC, ModelE, ModelA."
+                    is_required: False
+            outputs:
+                success: boolean
+                    filter_from_agent: True
+                recommended_model: string
+                    filter_from_agent: True
+                output_es: string
+                    filter_from_agent: False
+                output_pt: string
+                    filter_from_agent: False
+                error_message: string
+                    filter_from_agent: True
+
+# ============================================================
+# TPA PLAN DE AHORRO (Argentina only)
+# ============================================================
+
+subagent savings_plan:
+    label: "Plan de Ahorro"
+    description: "TPA savings plan, payment voucher (cupón), quota status. Argentina only."
+
+    before_reasoning:
+        set @variables.active_topic = "savings_plan"
+        if @variables.identified == False:
+            transition to @subagent.agent_router
+        if @variables.country_code != "AR":
+            transition to @subagent.agent_router
+
+    reasoning:
+        instructions: ->
+            | Estás en Plan de Ahorro. Reglas:
+              1. Pedí el grupo y orden del plan. Si el cliente no los tiene a mano, pedí DNI + nombre completo.
+              2. Llamá brand_get_savings_plan_status para localizar el plan.
+              3. Si el cupón está pendiente y estamos a fin de mes, decí: "Como estamos en los últimos días hábiles del mes, el cupón no va a aparecer en home banking. Podés pagarlo con Mercado Pago, Rapipago o Pago Fácil." Es normal — no es un error.
+              4. Si el cliente quiere recibir el instructivo, confirmá el email y llamá brand_send_voucher_email.
+              Después de leer la respuesta, NO llames de nuevo a menos que el cliente pida algo distinto.
+              Cuando termine, transicioná a agent_router con go_to_router.
+
+        actions:
+            brand_get_savings_plan_status: @actions.brand_get_savings_plan_status
+                with dni = ...
+                with group_number = ...
+                with order_number = ...
+
+            brand_send_voucher_email: @actions.brand_send_voucher_email
+                with account_id = @variables.account_id
+                with email = ...
+
+            go_to_router: @utils.transition to @subagent.agent_router
+                description: "Return to the router after the TPA question is answered."
+
+    actions:
+        brand_get_savings_plan_status:
+            description: "Lookup Plan de Ahorro status by DNI or by group and order number."
+            label: "Get TPA Status"
+            target: "apex://BrandGetSavingsPlanStatus"
+            inputs:
+                dni: string
+                    description: "Argentine national ID."
+                    is_required: False
+                group_number: string
+                    description: "TPA plan group number, e.g. 777."
+                    is_required: False
+                order_number: string
+                    description: "TPA plan order number, e.g. 42."
+                    is_required: False
+            outputs:
+                success: boolean
+                    filter_from_agent: True
+                plan_name: string
+                    filter_from_agent: True
+                output_es: string
+                    filter_from_agent: False
+                output_pt: string
+                    filter_from_agent: False
+                error_message: string
+                    filter_from_agent: True
+
+        brand_send_voucher_email:
+            description: "Send the TPA self-service voucher instructions to the caller's email. Confirm before sending."
+            label: "Send TPA Voucher Email"
+            target: "apex://BrandSendVoucherEmail"
+            inputs:
+                account_id: string
+                    description: "Salesforce Account Id."
+                    is_required: True
+                email: string
+                    description: "Email address to send the voucher instructions to."
+                    is_required: True
+            outputs:
+                success: boolean
+                    filter_from_agent: True
+                output_es: string
+                    filter_from_agent: False
+                output_pt: string
+                    filter_from_agent: False
+                error_message: string
+                    filter_from_agent: True
+
+# ============================================================
+# WARRANTY / <BRAND> 10 PROGRAM
+# ============================================================
+
+subagent warranty:
+    label: "Warranty"
+    description: "Standard warranty, <Brand>10 program, coverage, Lexus group warranty."
+
+    before_reasoning:
+        set @variables.active_topic = "warranty"
+        if @variables.identified == False:
+            transition to @subagent.agent_router
+
+    reasoning:
+        instructions: ->
+            | Estás en garantía. Reglas críticas para <Brand>10:
+              1. Modelos elegibles: ModelF, ModelC, ModelC, ModelC, ModelE, Yaris, ModelD. El ModelA NO es elegible (descontinuado).
+              2. La garantía <Brand>10 está activa solo si todos los services se hicieron en red autorizada <Brand>.
+              3. Para confirmar el status, pedí el chassi (Brasil) o la patente (Argentina) y llamá brand_get_warranty_status.
+              4. Si el cliente pregunta por bicos injetores u otro problema crónico específico: NO confirmes ni niegues. Decí que <Brand> no publicó ninguna nota oficial reconociendo problema crónico, y redirigí a diagnóstico en concesionaria.
+              5. Lexus es parte del grupo <Brand> — atendé la consulta pidiendo modelo y año exacto.
+              Después de la respuesta, NO llames la acción de nuevo a menos que el cliente cambie de chassi.
+              Cuando termine, transicioná a agent_router con go_to_router.
+
+        actions:
+            brand_get_warranty_status: @actions.brand_get_warranty_status
+                with chassi = ...
+                with asset_id = ...
+                with country = @variables.country_code
+
+            go_to_router: @utils.transition to @subagent.agent_router
+                description: "Return to the router after the warranty question is answered."
+
+    actions:
+        brand_get_warranty_status:
+            description: "Lookup warranty status by chassi or asset id. Returns <Brand>10 active flag, expiry, and coverage."
+            label: "Get Warranty Status"
+            target: "apex://BrandGetWarrantyStatus"
+            inputs:
+                chassi: string
+                    description: "VIN or chassi number."
+                    is_required: False
+                asset_id: string
+                    description: "Salesforce Asset Id."
+                    is_required: False
+                country: string
+                    description: "AR or BR."
+                    is_required: True
+            outputs:
+                success: boolean
+                    filter_from_agent: True
+                is_active: boolean
+                    filter_from_agent: True
+                days_remaining: integer
+                    filter_from_agent: True
+                output_es: string
+                    filter_from_agent: False
+                output_pt: string
+                    filter_from_agent: False
+                error_message: string
+                    filter_from_agent: True
+
+# ============================================================
+# CONNECTED TITULAR (Argentina only)
+# ============================================================
+
+subagent connected_titular:
+    label: "<Brand> Connected"
+    description: "Vehicle Connected app linkage and titular change. Argentina only."
+
+    before_reasoning:
+        set @variables.active_topic = "connected_titular"
+        if @variables.identified == False:
+            transition to @subagent.agent_router
+        if @variables.country_code != "AR":
+            transition to @subagent.agent_router
+
+    reasoning:
+        instructions: ->
+            | Estás en <Brand> Connected. Reglas críticas:
+              1. Pedí la patente del vehículo y llamá brand_get_connected_titular.
+              2. Si el sistema devuelve un titular distinto al que llama, manejá con calma. Esto ocurre en compras de vehículos usados — NO exijas explicaciones ni expreses sospecha.
+              3. NUNCA leas en voz alta el nombre o DNI del titular anterior. Decí solo: "La unidad está registrada a nombre de otro titular."
+              4. Para hacer el cambio: el cliente debe enviar mail a connected-support@<brand>.example.com con título automotor digital y licencia de conducir.
+              5. Pedí el email que el cliente quiere vincular y mencioná que la respuesta llega en un día hábil.
+              Después de leer la respuesta, NO llames la acción de nuevo a menos que el cliente cambie patente.
+              Cuando termine, transicioná a agent_router con go_to_router.
+
+        actions:
+            brand_get_connected_titular: @actions.brand_get_connected_titular
+                with patente = ...
+
+            go_to_router: @utils.transition to @subagent.agent_router
+                description: "Return to the router after the Connected question is answered."
+
+    actions:
+        brand_get_connected_titular:
+            description: "Lookup current connected-vehicle titular by license plate."
+            label: "Get Connected Titular"
+            target: "apex://BrandGetConnectedTitular"
+            inputs:
+                patente: string
+                    description: "Argentine license plate, e.g., AH 830 SP."
+                    is_required: True
+            outputs:
+                success: boolean
+                    filter_from_agent: True
+                connected_status: boolean
+                    filter_from_agent: True
+                output_es: string
+                    filter_from_agent: False
+                output_pt: string
+                    filter_from_agent: False
+                error_message: string
+                    filter_from_agent: True
+
+# ============================================================
+# SALES ORDERS (Brazil mostly)
+# ============================================================
+
+subagent sales_orders:
+    label: "New Vehicle Sales"
+    description: "Status of a new vehicle order. Brazil (TDB) primarily."
+
+    before_reasoning:
+        set @variables.active_topic = "sales_orders"
+        if @variables.identified == False:
+            transition to @subagent.agent_router
+
+    reasoning:
+        instructions: ->
+            | Estás en consultas de pedido de vehículo nuevo. PROTOCOLO OBLIGATORIO:
+              PASO 1 — Si el cliente mencionó un CPF (formato XXX.XXX.XXX-XX) o número de pedido en su mensaje, INMEDIATAMENTE invocá brand_get_vehicle_order_status con ese dato. NO escribas una respuesta de texto sin invocar la acción primero.
+              PASO 2 — Si NO mencionó CPF ni número de pedido, pedí UNO con tono breve y natural.
+              PASO 3 — Después de invocar la acción, leé output_pt o output_es palabra por palabra y respondé al cliente. NO inventés "no encontré" sin haber invocado la acción.
+              PROHIBIDO:
+              - Decir "não encontrei" sin haber llamado la acción primero.
+              - Prometer una fecha exacta de entrega — la concesionaria confirma esa fecha.
+              SOLO transicioná a agent_router con go_to_router si el cliente cambia de tema.
+
+        actions:
+            brand_get_vehicle_order_status: @actions.brand_get_vehicle_order_status
+                description: "Look up the vehicle order status NOW for the CPF or order number the caller just mentioned. EXTRACT the CPF exactly as said (e.g., '123.456.789-00'). Always invoke when the caller has provided a CPF."
+                with cpf = ...
+                with order_number = ...
+                with country = @variables.country_code
+
+            go_to_router: @utils.transition to @subagent.agent_router
+                description: "Return to the router after the order status question is answered."
+
+    actions:
+        brand_get_vehicle_order_status:
+            description: "Lookup new vehicle order status by CPF or order number."
+            label: "Get Vehicle Order Status"
+            target: "apex://BrandGetVehicleOrderStatus"
+            inputs:
+                cpf: string
+                    description: "Brazilian national ID."
+                    is_required: False
+                order_number: string
+                    description: "Order number."
+                    is_required: False
+                country: string
+                    description: "AR or BR."
+                    is_required: True
+            outputs:
+                success: boolean
+                    filter_from_agent: True
+                stage_label_es: string
+                    filter_from_agent: True
+                output_es: string
+                    filter_from_agent: False
+                output_pt: string
+                    filter_from_agent: False
+                error_message: string
+                    filter_from_agent: True
+
+# ============================================================
+# TECHNICAL LOOKUP — manuals, dashboard buttons, technical bulletins
+# ============================================================
+
+subagent technical_lookup:
+    label: "Technical Lookup"
+    description: "Free-form technical or manual question. E.g., dashboard button, warning light, function explanation."
+
+    before_reasoning:
+        set @variables.active_topic = "technical_lookup"
+        if @variables.identified == False:
+            transition to @subagent.agent_router
+
+    reasoning:
+        instructions: ->
+            | Estás en consultas técnicas. Reglas:
+              1. Pedí descripción del síntoma o del botón, y modelo del vehículo si no lo sabés todavía.
+              2. Llamá brand_search_manual con la descripción, el modelo y el idioma (es o pt).
+              3. La respuesta viene del bulletin o manual oficial. Leéla tal cual — no embellezcas ni paraphrasees.
+              4. Si la pregunta es sobre Lexus, pedí modelo y año exactos.
+              Después de leer la respuesta, NO llames la acción de nuevo a menos que el cliente cambie de pregunta.
+              Cuando termine, transicioná a agent_router con go_to_router.
+
+        actions:
+            brand_search_manual: @actions.brand_search_manual
+                with description = ...
+                with vehicle_model = ...
+                with language = ...
+
+            go_to_router: @utils.transition to @subagent.agent_router
+                description: "Return to the router after the technical question is answered."
+
+    actions:
+        brand_search_manual:
+            description: "Search <Brand> technical bulletins and owner manuals for a free-form description."
+            label: "Search Manual"
+            target: "apex://BrandSearchManual"
+            inputs:
+                description: string
+                    description: "Free-text description of the question or symptom."
+                    is_required: True
+                vehicle_model: string
+                    description: "<Brand> or Lexus model name."
+                    is_required: False
+                language: string
+                    description: "es or pt."
+                    is_required: False
+            outputs:
+                success: boolean
+                    filter_from_agent: True
+                source_document: string
+                    filter_from_agent: True
+                output_es: string
+                    filter_from_agent: False
+                output_pt: string
+                    filter_from_agent: False
+                error_message: string
+                    filter_from_agent: True
+
+# ============================================================
+# ESCALATION
+# ============================================================
+
+subagent escalation:
+    label: "Escalation"
+    description: "Hand off to a human specialist when the agent cannot help, sentiment turns negative, or the caller asks for a human."
+
+    reasoning:
+        instructions: ->
+            | El cliente necesita un humano. Decí con empatía: "Entiendo. Te paso con un especialista para que te ayude de inmediato. ¿Podés esperar un momento?"
+              Luego invocá escalate_to_human para terminar la sesión.
+
+        actions:
+            escalate_to_human: @utils.escalate
+                description: "Transfer the call to a live human agent."
+
+# ============================================================
+# OFF TOPIC
+# ============================================================
+
+subagent off_topic:
+    label: "Off Topic"
+    description: "Caller asked about something outside the <Brand> or Lexus scope."
+
+    reasoning:
+        instructions: |
+            La consulta está fuera de tu alcance.
+            Decí: "Mi especialidad es ayudarte con todo lo relacionado con <Brand>. Para comparaciones con otras marcas, consultá directamente con cada fabricante. ¿Te puedo ayudar con algo de <Brand> hoy?"
+            Si el cliente confirma una intención válida, transicioná a agent_router con go_to_router.
+
+        actions:
+            go_to_router: @utils.transition to @subagent.agent_router
+                description: "Return to the router after redirecting."
+
+# ============================================================
+# AMBIGUOUS QUESTION
+# ============================================================
+
+subagent ambiguous_question:
+    label: "Ambiguous Question"
+    description: "Caller's request is unclear and needs clarification."
+
+    reasoning:
+        instructions: |
+            La consulta del cliente no está clara.
+            Pedí más detalles con calma. Por ejemplo: "¿Podrías darme un poco más de detalle sobre lo que necesitás? ¿Es una consulta de service, garantía, plan de ahorro, Fleet o algo distinto?"
+            Cuando el cliente clarifique, transicioná a agent_router con go_to_router.
+
+        actions:
+            go_to_router: @utils.transition to @subagent.agent_router
+                description: "Return to the router after clarification."

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Total_Quotas__c</fullName>
+    <defaultValue>84</defaultValue>
+    <description>Total number of quotas (installments) in the plan. TPA standard plans are 84 months.</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Total quotas in the plan (typically 84).</inlineHelpText>
+    <label>Total Quotas</label>
+    <precision>3</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <trackTrending>false</trackTrending>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>

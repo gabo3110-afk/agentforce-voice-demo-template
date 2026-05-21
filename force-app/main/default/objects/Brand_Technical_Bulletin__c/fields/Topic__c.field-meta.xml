@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Topic__c</fullName>
+    <description>Topic / subject of the bulletin (e.g., "VSC Button — Vehicle Stability Control").</description>
+    <inlineHelpText>Short title that identifies the bulletin topic.</inlineHelpText>
+    <label>Topic</label>
+    <length>200</length>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

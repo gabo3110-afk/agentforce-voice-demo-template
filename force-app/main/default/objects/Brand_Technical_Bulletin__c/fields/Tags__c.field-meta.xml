@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Tags__c</fullName>
+    <description>Comma-separated keyword tags used by the retriever to match user questions.</description>
+    <inlineHelpText>Keywords (comma-separated) for retrieval matching.</inlineHelpText>
+    <label>Tags</label>
+    <length>255</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

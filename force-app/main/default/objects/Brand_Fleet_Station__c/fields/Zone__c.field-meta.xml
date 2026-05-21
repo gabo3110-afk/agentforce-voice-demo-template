@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Zone__c</fullName>
+    <description>Geographic zone for the fleet station (used by routing logic to find a station near the customer).</description>
+    <inlineHelpText>CABA, GBA Norte, GBA Sur, GBA Oeste, or Interior.</inlineHelpText>
+    <label>Zone</label>
+    <required>true</required>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>CABA</fullName>
+                <default>true</default>
+                <label>CABA</label>
+            </value>
+            <value>
+                <fullName>GBA Norte</fullName>
+                <default>false</default>
+                <label>GBA Norte</label>
+            </value>
+            <value>
+                <fullName>GBA Sur</fullName>
+                <default>false</default>
+                <label>GBA Sur</label>
+            </value>
+            <value>
+                <fullName>GBA Oeste</fullName>
+                <default>false</default>
+                <label>GBA Oeste</label>
+            </value>
+            <value>
+                <fullName>Interior</fullName>
+                <default>false</default>
+                <label>Interior</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

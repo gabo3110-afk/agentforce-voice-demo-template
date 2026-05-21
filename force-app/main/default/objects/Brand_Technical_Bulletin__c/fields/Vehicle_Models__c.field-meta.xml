@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Vehicle_Models__c</fullName>
+    <description>Vehicle models this bulletin applies to (use "All Models" when generic).</description>
+    <inlineHelpText>Models the bulletin applies to.</inlineHelpText>
+    <label>Vehicle Models</label>
+    <required>false</required>
+    <type>MultiselectPicklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>All Models</fullName>
+                <default>false</default>
+                <label>All Models</label>
+            </value>
+            <value>
+                <fullName>SW4</fullName>
+                <default>false</default>
+                <label>SW4</label>
+            </value>
+            <value>
+                <fullName>Hilux DC</fullName>
+                <default>false</default>
+                <label>Hilux DC</label>
+            </value>
+            <value>
+                <fullName>Hilux SC</fullName>
+                <default>false</default>
+                <label>Hilux SC</label>
+            </value>
+            <value>
+                <fullName>Yaris HB</fullName>
+                <default>false</default>
+                <label>Yaris HB</label>
+            </value>
+            <value>
+                <fullName>Yaris HB TOP</fullName>
+                <default>false</default>
+                <label>Yaris HB TOP</label>
+            </value>
+            <value>
+                <fullName>Yaris HB AT</fullName>
+                <default>false</default>
+                <label>Yaris HB AT</label>
+            </value>
+            <value>
+                <fullName>Corolla</fullName>
+                <default>false</default>
+                <label>Corolla</label>
+            </value>
+            <value>
+                <fullName>Corolla HV</fullName>
+                <default>false</default>
+                <label>Corolla HV</label>
+            </value>
+            <value>
+                <fullName>Corolla Cross HV</fullName>
+                <default>false</default>
+                <label>Corolla Cross HV</label>
+            </value>
+            <value>
+                <fullName>Etios HB</fullName>
+                <default>false</default>
+                <label>Etios HB</label>
+            </value>
+            <value>
+                <fullName>HIACE</fullName>
+                <default>false</default>
+                <label>HIACE</label>
+            </value>
+            <value>
+                <fullName>RAV4 PHEV</fullName>
+                <default>false</default>
+                <label>RAV4 PHEV</label>
+            </value>
+            <value>
+                <fullName>Lexus</fullName>
+                <default>false</default>
+                <label>Lexus</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+    <visibleLines>8</visibleLines>
+</CustomField>

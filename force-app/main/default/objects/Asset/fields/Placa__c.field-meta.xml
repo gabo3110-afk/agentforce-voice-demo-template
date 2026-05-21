@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Placa__c</fullName>
+    <description>Brazilian vehicle license plate (Mercosul format). External ID for BR vehicle matching.</description>
+    <externalId>true</externalId>
+    <inlineHelpText>BR placa / license plate.</inlineHelpText>
+    <label>Placa</label>
+    <length>10</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

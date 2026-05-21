@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Patente__c</fullName>
+    <description>Argentine vehicle license plate (e.g., "AH 830 SP"). External ID for AR vehicle matching.</description>
+    <externalId>true</externalId>
+    <inlineHelpText>AR patente / license plate.</inlineHelpText>
+    <label>Patente</label>
+    <length>10</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Chassi__c</fullName>
+    <description>VIN / chassi number for the vehicle covered by this warranty (used as external ID for lookups).</description>
+    <externalId>true</externalId>
+    <inlineHelpText>VIN/chassi (e.g., 33BE4L200063201) — used to match the warranty to the vehicle.</inlineHelpText>
+    <label>Chassi</label>
+    <length>20</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

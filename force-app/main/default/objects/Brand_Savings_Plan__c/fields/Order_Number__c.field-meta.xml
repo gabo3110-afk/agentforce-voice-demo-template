@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Order_Number__c</fullName>
+    <description>TPA order number within the group (e.g., 42). Used together with Group Number to identify a specific subscriber.</description>
+    <inlineHelpText>Order number within the group.</inlineHelpText>
+    <label>Order Number</label>
+    <length>20</length>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>66.0</apiVersion>
+    <description>Creates a confirmation Task on the parent record after a ServiceAppointment is inserted by the Brand Voice Agent.</description>
+    <environments>Default</environments>
+    <interviewLabel>Brand ServiceAppointment Confirmation {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Brand ServiceAppointment Confirmation</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <runInMode>SystemModeWithSharing</runInMode>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Create_Confirmation_Task</targetReference>
+        </connector>
+        <object>ServiceAppointment</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+    <recordCreates>
+        <name>Create_Confirmation_Task</name>
+        <label>Create Confirmation Task</label>
+        <locationX>50</locationX>
+        <locationY>120</locationY>
+        <inputAssignments>
+            <field>Subject</field>
+            <value>
+                <elementReference>Subject_Formula</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>WhatId</field>
+            <value>
+                <elementReference>$Record.ParentRecordId</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status</field>
+            <value>
+                <stringValue>Open</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>ActivityDate</field>
+            <value>
+                <elementReference>Activity_Date_Formula</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Task</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+    <formulas>
+        <name>Subject_Formula</name>
+        <dataType>String</dataType>
+        <expression>"Service confirmed: " + TEXT({!$Record.SchedStartTime})</expression>
+    </formulas>
+    <formulas>
+        <name>Activity_Date_Formula</name>
+        <dataType>Date</dataType>
+        <expression>DATEVALUE({!$Record.SchedStartTime})</expression>
+    </formulas>
+</Flow>

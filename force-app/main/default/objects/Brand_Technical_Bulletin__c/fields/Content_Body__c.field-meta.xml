@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Content_Body__c</fullName>
+    <description>Full narrative body of the bulletin — used directly as Agentforce knowledge text.</description>
+    <inlineHelpText>The body text the agent will read or summarize.</inlineHelpText>
+    <label>Content Body</label>
+    <length>32000</length>
+    <type>LongTextArea</type>
+    <visibleLines>20</visibleLines>
+</CustomField>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Station__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Pickup fleet station for this contract.</description>
+    <inlineHelpText>Where the customer picks up the vehicle.</inlineHelpText>
+    <label>Pickup Station</label>
+    <referenceTo>Brand_Fleet_Station__c</referenceTo>
+    <relationshipLabel>Fleet Rental Contracts</relationshipLabel>
+    <relationshipName>Fleet Rental_Contracts</relationshipName>
+    <required>true</required>
+    <type>Lookup</type>
+</CustomField>

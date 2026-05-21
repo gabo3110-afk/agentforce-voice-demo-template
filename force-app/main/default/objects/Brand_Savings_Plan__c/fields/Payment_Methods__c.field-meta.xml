@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Payment_Methods__c</fullName>
+    <description>Allowed payment channels for this customer's TPA quotas.</description>
+    <inlineHelpText>Channels by which the customer can pay (MercadoPago, Rapipago, etc.).</inlineHelpText>
+    <label>Payment Methods</label>
+    <required>false</required>
+    <type>MultiselectPicklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>MercadoPago</fullName>
+                <default>false</default>
+                <label>MercadoPago</label>
+            </value>
+            <value>
+                <fullName>Rapipago</fullName>
+                <default>false</default>
+                <label>Rapipago</label>
+            </value>
+            <value>
+                <fullName>PagoFacil</fullName>
+                <default>false</default>
+                <label>Pago Facil</label>
+            </value>
+            <value>
+                <fullName>HomeBanking</fullName>
+                <default>false</default>
+                <label>Home Banking</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+    <visibleLines>4</visibleLines>
+</CustomField>

@@ -1,0 +1,28 @@
+# Salesforce CLI
+.sfdx/
+.sf/
+.localdevserver/
+
+# Logs and traces
+*.log
+.sfdx/agents/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Env
+.env
+.env.local
+
+# Deploy artifacts
+unpackaged/
+*.zip
+deploy-output*.txt
+
+# Temp test data
+/tmp/
+scratch.cls
+scratch.apex

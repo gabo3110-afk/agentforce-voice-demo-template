@@ -1,0 +1,9 @@
+# Standard ignores
+**/jsconfig.json
+**/.eslintrc.json
+**/.prettierrc
+**/__tests__/**
+
+# Local-only docs
+docs/
+README.md

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Connected_Status__c</fullName>
+    <defaultValue>true</defaultValue>
+    <description>True when the vehicle is actively connected in the <Brand> Connected app.</description>
+    <inlineHelpText>True if connection is active.</inlineHelpText>
+    <label>Connected Status</label>
+    <type>Checkbox</type>
+</CustomField>

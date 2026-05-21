@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Protocol_Number__c</fullName>
+    <description>External protocol number (TASA / TDB) for the case (e.g., "797-3"). Used for customer status lookups.</description>
+    <externalId>true</externalId>
+    <inlineHelpText>Protocol number provided by <Brand>.</inlineHelpText>
+    <label>Protocol Number</label>
+    <length>30</length>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

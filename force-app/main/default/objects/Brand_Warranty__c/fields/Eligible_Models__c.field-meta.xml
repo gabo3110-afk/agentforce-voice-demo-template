@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Eligible_Models__c</fullName>
+    <description>JSON list of models eligible for this warranty program (<Brand> 10 eligibility).</description>
+    <inlineHelpText>JSON array, e.g., ["Corolla XEi G12","Corolla Cross HV"].</inlineHelpText>
+    <label>Eligible Models</label>
+    <length>1000</length>
+    <type>LongTextArea</type>
+    <visibleLines>5</visibleLines>
+</CustomField>

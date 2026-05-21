@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Pickup_Instructions__c</fullName>
+    <description>Specific pickup instructions and dealer notes for the customer.</description>
+    <inlineHelpText>Free-text pickup details (parking, hours, contact).</inlineHelpText>
+    <label>Pickup Instructions</label>
+    <length>1000</length>
+    <type>LongTextArea</type>
+    <visibleLines>5</visibleLines>
+</CustomField>

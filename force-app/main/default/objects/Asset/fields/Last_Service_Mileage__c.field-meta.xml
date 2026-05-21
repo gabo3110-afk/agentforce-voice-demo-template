@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Last_Service_Mileage__c</fullName>
+    <description>Odometer reading at the time of the last service (km).</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Mileage in km at the last service.</inlineHelpText>
+    <label>Last Service Mileage</label>
+    <precision>7</precision>
+    <required>false</required>
+    <scale>0</scale>
+    <trackTrending>false</trackTrending>
+    <type>Number</type>
+    <unique>false</unique>
+</CustomField>
