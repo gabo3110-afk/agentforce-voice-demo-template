@@ -1,0 +1,40 @@
+name: Validate metadata
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint XML files
+        run: |
+          # Ensure all *.xml files are well-formed
+          find force-app -name "*.xml" -type f | while read f; do
+            xmllint --noout "$f" || (echo "Malformed XML: $f"; exit 1)
+          done
+
+      - name: Verify no leaked customer data
+        run: |
+          # Template should never contain customer-specific names
+          if grep -ri --include="*.xml" --include="*.cls" --include="*.agent" --include="*.apex" "toyota" force-app scripts 2>/dev/null | grep -v "rename-brand"; then
+            echo "::error::Customer-specific 'toyota' references found outside intentional examples — sanitize before commit."
+            exit 1
+          fi
+
+      - name: Apex source structure check
+        run: |
+          for cls in force-app/main/default/classes/*.cls; do
+            meta="${cls}-meta.xml"
+            if [ ! -f "$meta" ]; then
+              echo "::error::Missing meta XML for $cls"
+              exit 1
+            fi
+          done
+
+      - name: Verify rename script syntax
+        run: bash -n scripts/rename-brand.sh
